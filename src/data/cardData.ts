@@ -22,10 +22,10 @@ export const INITIAL_CARD_DATA: CardData = {
   // ----------------------------------------------------------------------------
   // 1. PERSONAL NAMES & ANNIVERSARY COUNTER
   // ----------------------------------------------------------------------------
-  recipientName: 'Claire',
-  senderName: 'Leo',
-  senderSignature: 'With all my love, Leo 💕',
-  anniversaryDate: 'September 28', // Late September 1-year anniversary (365 days)
+  recipientName: 'Mommy Brinah',
+  senderName: 'Daddy Brinah',
+  senderSignature: 'With all my love, Son in Love 💕',
+  anniversaryDate: 'October 8', // Late September 1-year anniversary (365 days)
   daysTogether: 365,
   anniversaryBadgeText: '1 Year • 365 Days Together 💕',
 
@@ -39,14 +39,14 @@ export const INITIAL_CARD_DATA: CardData = {
   // 3. PLAYFUL QUESTION SCREEN
   // ----------------------------------------------------------------------------
   questionTitle: 'Would you choose me all over again? ❤️',
-  questionSubtitleInitial: "After 365 days together, Claire... There are only two choices! 😉",
+  questionSubtitleInitial: "After 365 days together, Mamaa... There are only two choices! 😉",
   questionSubtitleDodge: "You know in your heart there's only one right answer! 💕",
   questionYesText: 'YES, A THOUSAND TIMES! 🥰',
   questionNoTexts: [
-    'No 🙈',
-    'After 365 days?! 🥺',
-    'Think again! 😜',
-    'Too slow! 🏃‍♂️',
+    'No mommy 🙈',
+    'Naiweeee?! 🥺',
+    'Tekijjakkola mukwano! 😜',
+    'Jokes a side Mama! 🫣🏃‍♂️',
     'Nice try! ✨',
     'Oops, No was not found 💫',
     'Can’t touch this! 🎶',
@@ -233,7 +233,7 @@ export const INITIAL_CARD_DATA: CardData = {
   // 6. FINAL 1-YEAR ANNIVERSARY LETTER
   // ----------------------------------------------------------------------------
   letterTitle: 'To My Person, One Year In ✨',
-  letterGreeting: 'Dearest Claire,',
+  letterGreeting: 'Dearest Mommy Brinah',
   letterParagraphs: [
     "It feels like just yesterday we shared our very first nervous smile, yet somehow, living life with you feels as natural and essential as breathing. Exactly 365 days ago, our paths aligned into something extraordinary.",
     "Looking back over this past year, my favorite memories are not just the big milestones, they are the quiet, golden moments. The late night drives with the music humming, the inside jokes that only we understand, and the effortless comfort of simply sitting beside you in silence.",
