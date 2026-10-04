@@ -1,29 +1,14 @@
 // Web Audio API romantic acoustic piano / guitar engine and ambient sound effects
+// Background music now uses a real MP3 instead of synthesized chords
 
 class RomanticAudioManager {
   private ctx: AudioContext | null = null;
   private isMuted: boolean = true;
   private isPlaying: boolean = false;
-  private timerId: number | null = null;
-  private currentStep: number = 0;
   private masterGain: GainNode | null = null;
 
-  // Romantic chord progression (frequencies in Hz):
-  // Cmaj9 -> Am9 -> Fmaj7 -> Gsus4/G -> Em7 -> Fmaj7
-  private chordProgression = [
-    // Cmaj9: C3, G3, B3, D4, E4, G4
-    [130.81, 196.00, 246.94, 293.66, 329.63, 392.00],
-    // Am9: A2, E3, G3, C4, E4, B4
-    [110.00, 164.81, 196.00, 261.63, 329.63, 493.88],
-    // Fmaj7: F2, C3, E3, A3, C4, E4
-    [87.31, 130.81, 164.81, 220.00, 261.63, 329.63],
-    // Gsus4 / G: G2, D3, G3, B3, D4, G4
-    [98.00, 146.83, 196.00, 246.94, 293.66, 392.00],
-    // Em7: E2, B2, E3, G3, B3, E4
-    [82.41, 123.47, 164.81, 196.00, 246.94, 329.63],
-    // Fadd9: F2, C3, G3, A3, C4, G4
-    [87.31, 130.81, 196.00, 220.00, 261.63, 392.00],
-  ];
+  // ===== NEW: real song =====
+  private bgAudio: HTMLAudioElement | null = null;
 
   private getContext(): AudioContext {
     if (!this.ctx) {
@@ -45,11 +30,19 @@ class RomanticAudioManager {
 
   public toggleMute(): boolean {
     this.isMuted = !this.isMuted;
+
+    // Control the MP3 volume
+    if (this.bgAudio) {
+      this.bgAudio.volume = this.isMuted ? 0 : 0.4;
+    }
+
+    // Also control the old Web Audio master gain (used by SFX)
     const ctx = this.getContext();
     if (this.masterGain) {
       const targetGain = this.isMuted ? 0 : 0.35;
       this.masterGain.gain.setTargetAtTime(targetGain, ctx.currentTime, 0.2);
     }
+
     if (!this.isMuted && !this.isPlaying) {
       this.startMusic();
     }
@@ -62,123 +55,33 @@ class RomanticAudioManager {
     }
   }
 
+  // ===== BACKGROUND MUSIC (now MP3) =====
   public startMusic(): void {
     if (this.isPlaying) return;
     this.isPlaying = true;
-    this.getContext();
-    this.scheduleNextArpeggio();
+
+    if (!this.bgAudio) {
+      // ↓↓↓ CHANGE THIS PATH to match where you put your MP3 ↓↓↓
+      this.bgAudio = new Audio('/assets/avant-toi-song.mp3');
+      this.bgAudio.loop = true;
+      this.bgAudio.volume = this.isMuted ? 0 : 0.4;
+    }
+
+    // Browsers require a user gesture before playing audio
+    this.bgAudio.play().catch(() => {
+      // silently fail if autoplay is blocked
+    });
   }
 
   public stopMusic(): void {
     this.isPlaying = false;
-    if (this.timerId !== null) {
-      window.clearTimeout(this.timerId);
-      this.timerId = null;
+    if (this.bgAudio) {
+      this.bgAudio.pause();
+      this.bgAudio.currentTime = 0;
     }
   }
 
-  // Plays a single piano/acoustic plucked note with rich harmonics and natural decay
-  private playFeltNote(freq: number, startTime: number, velocity: number = 0.5, duration: number = 2.2): void {
-    if (!this.ctx || !this.masterGain) return;
-
-    const osc1 = this.ctx.createOscillator();
-    const osc2 = this.ctx.createOscillator();
-    const subOsc = this.ctx.createOscillator();
-
-    // Triangle + Sine for warm, felt-covered piano / acoustic nylon guitar hammer tone
-    osc1.type = 'triangle';
-    osc2.type = 'sine';
-    subOsc.type = 'sine';
-
-    osc1.frequency.setValueAtTime(freq, startTime);
-    // Slight detune for chorus warmth
-    osc2.frequency.setValueAtTime(freq * 1.002, startTime);
-    subOsc.frequency.setValueAtTime(freq * 0.5, startTime);
-
-    const noteGain = this.ctx.createGain();
-    // Warm lowpass filter to emulate soft piano felt & wooden acoustic resonance
-    const filter = this.ctx.createBiquadFilter();
-    filter.type = 'lowpass';
-    filter.frequency.setValueAtTime(1400, startTime);
-    filter.frequency.exponentialRampToValueAtTime(320, startTime + duration);
-
-    // Envelope
-    noteGain.gain.setValueAtTime(0.0001, startTime);
-    // Soft attack (~15ms)
-    noteGain.gain.linearRampToValueAtTime(velocity * 0.25, startTime + 0.015);
-    // Natural acoustic exponential decay
-    noteGain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
-
-    // Connect
-    osc1.connect(filter);
-    osc2.connect(filter);
-    subOsc.connect(filter);
-    filter.connect(noteGain);
-    noteGain.connect(this.masterGain);
-
-    osc1.start(startTime);
-    osc2.start(startTime);
-    subOsc.start(startTime);
-
-    osc1.stop(startTime + duration);
-    osc2.stop(startTime + duration);
-    subOsc.stop(startTime + duration);
-  }
-
-  private scheduleNextArpeggio = (): void => {
-    if (!this.isPlaying || !this.ctx) return;
-
-    const chordIndex = Math.floor(this.currentStep / 8) % this.chordProgression.length;
-    const noteInChord = this.currentStep % 8;
-    const chord = this.chordProgression[chordIndex];
-
-    // Elegant fingerpicking pattern: Bass root on 0, then rolling arpeggios
-    let noteFreq = chord[0];
-    let vel = 0.55;
-
-    if (noteInChord === 0) {
-      // Root bass note
-      noteFreq = chord[0];
-      vel = 0.65;
-    } else if (noteInChord === 1) {
-      noteFreq = chord[2];
-      vel = 0.45;
-    } else if (noteInChord === 2) {
-      noteFreq = chord[3];
-      vel = 0.48;
-    } else if (noteInChord === 3) {
-      noteFreq = chord[4];
-      vel = 0.52;
-    } else if (noteInChord === 4) {
-      noteFreq = chord[5] || chord[4];
-      vel = 0.58;
-    } else if (noteInChord === 5) {
-      noteFreq = chord[3];
-      vel = 0.45;
-    } else if (noteInChord === 6) {
-      noteFreq = chord[2];
-      vel = 0.48;
-    } else if (noteInChord === 7) {
-      noteFreq = chord[1];
-      vel = 0.42;
-    }
-
-    const now = this.ctx.currentTime;
-    this.playFeltNote(noteFreq, now, vel, 2.5);
-
-    // Optional top romantic bell melody accents
-    if (this.currentStep % 4 === 0) {
-      const bellFreq = chord[4] * 1.5;
-      this.playFeltNote(bellFreq, now + 0.08, 0.25, 2.0);
-    }
-
-    this.currentStep++;
-    // ~94 BPM (approx 320ms per eighth note)
-    const stepDurationMs = 320;
-    this.timerId = window.setTimeout(this.scheduleNextArpeggio, stepDurationMs);
-  };
-
-  // Sound Effects
+  // ===== ALL SOUND EFFECTS BELOW ARE UNCHANGED =====
 
   // 1. Easter egg sparkle chime (3 heart clicks)
   public playEasterEggChime(): void {
