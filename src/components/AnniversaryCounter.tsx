@@ -11,7 +11,7 @@ interface AnniversaryCounterProps {
 export const AnniversaryCounter: React.FC<AnniversaryCounterProps> = ({
   recipientName,
   daysTogether = 365,
-  anniversaryDate = 'September 28',
+  anniversaryDate = 'October 8',
   variant = 'cover',
 }) => {
   // Always maintain the exact 1-Year (365 days) anniversary count requested
