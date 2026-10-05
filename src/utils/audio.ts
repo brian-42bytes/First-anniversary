@@ -62,7 +62,7 @@ class RomanticAudioManager {
 
     if (!this.bgAudio) {
       // ↓↓↓ CHANGE THIS PATH to match where you put your MP3 ↓↓↓
-      this.bgAudio = new Audio('/assets/your-song.mp3');
+      this.bgAudio = new Audio('/assets/avant-toi-song.mp3');
       this.bgAudio.loop = true;
       this.bgAudio.volume = this.isMuted ? 0 : 0.4;
     }
